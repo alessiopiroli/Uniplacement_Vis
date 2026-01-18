@@ -2,11 +2,11 @@
 
 [2025ws] Data Visualization
 
-## 📊 Project Overview
+## Project Overview
 
 An interactive dashboard for analyzing key success factors in university student placement, built with D3.js.
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 Uniplacement_Vis/
@@ -26,7 +26,7 @@ Uniplacement_Vis/
         └── boxPlot.js              # View 4: Soft Skills
 ```
 
-## 🎯 Dashboard Views
+## Dashboard Views
 
 | View   | Chart Type           | Task                                                        |
 | ------ | -------------------- | ----------------------------------------------------------- |
@@ -35,19 +35,19 @@ Uniplacement_Vis/
 | View 3 | Horizontal Bar Chart | Identify top-performing colleges                            |
 | View 4 | Box Plot             | Compare soft skills importance for placement                |
 
-## 🔗 Interactions
+## Interactions
 
 - **CGPA Range Slider**: Filter data across all views (linked views)
 - **Tooltip**: Hover over elements to see detailed information
 - **Ghosting Effect**: Non-filtered data points are de-emphasized in scatter plot
 
-## 🚀 Getting Started
+## Getting Started
 
 1. Clone the repository
 2. Open with Live Server or any local server
 3. Open `index.html` in your browser
 
-## 📦 Technologies
+## Technologies
 
 - D3.js v7
 - HTML5 / CSS3
