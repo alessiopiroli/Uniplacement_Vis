@@ -6,7 +6,9 @@
 // Global variables
 let data = [];
 let filteredData = [];
-let cgpaRange = [4, 11];
+
+// NEW: View 1 only (CGPA slider should only affect View 1)
+let view1CgpaRange = [4, 11];
 
 // View 2 sampling globals (IMPORTANT: must exist before scatterPlot.js reads them)
 let scatterSamplePct = 5;      // default at first load
@@ -47,7 +49,7 @@ async function init() {
       _index: i,
       _rand: Math.random(),
 
-      // Be tolerant to different header naming (your repo previously used different keys)
+      // Be tolerant to different header naming
       college_id: d.College_ID ?? d.CollegeID ?? d.CollegeId ?? d.College_ID,
       iq: +(d.IQ ?? d.Iq),
       prev_sem: +(d.Prev_Sem_Result ?? d.PrevSemResult),
@@ -60,6 +62,7 @@ async function init() {
       placement: d.Placement
     }));
 
+    // Keep other views unfiltered
     filteredData = [...data];
 
     // Initialize all views
@@ -69,16 +72,16 @@ async function init() {
     createBoxPlot();
 
     // Setup interactions
-    setupSliderInteraction();          // View 1 range filter
+    setupSliderInteraction();          // View 1 range filter (ONLY View 1)
     setupScatterSampleInteraction();   // View 2 sampling slider
-    setupSwapViewsButton();            // Swap button
+    setupSwapViewsButton();            // Layout toggle button
 
   } catch (error) {
     console.error("Error loading data:", error);
   }
 }
 
-// View 1: CGPA range slider
+// View 1: CGPA range slider (ONLY updates View 1)
 function setupSliderInteraction() {
   const sliderMin = document.getElementById('cgpa-slider-min');
   const sliderMax = document.getElementById('cgpa-slider-max');
@@ -104,8 +107,9 @@ function setupSliderInteraction() {
     rangeSelected.style.left = percent1 + '%';
     rangeSelected.style.width = (percent2 - percent1) + '%';
 
-    cgpaRange = [minVal, maxVal];
-    updateAllViews();
+    // IMPORTANT: do NOT touch filteredData, and do NOT update other charts
+    view1CgpaRange = [minVal, maxVal];
+    updateStackedBarChart();
   }
 
   sliderMin.addEventListener('input', updateSlider);
@@ -138,29 +142,17 @@ function setupScatterSampleInteraction() {
   updateScatterPlot();
 }
 
-// Swap views button
+// Layout toggle button
 function setupSwapViewsButton() {
-    const btn = document.getElementById('swap-views-btn');
-    const dashboard = document.getElementById('dashboard');
-    if (!btn || !dashboard) return;
-  
-    btn.addEventListener('click', () => {
-      const is2 = dashboard.classList.contains('layout-2rows');
-  
-      dashboard.classList.toggle('layout-2rows', !is2);
-      dashboard.classList.toggle('layout-3rows', is2);
-    });
-  }
-  
+  const btn = document.getElementById('swap-views-btn');
+  const dashboard = document.getElementById('dashboard');
+  if (!btn || !dashboard) return;
 
-// Update all views based on filter
-function updateAllViews() {
-  filteredData = data.filter(d => d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1]);
-
-  updateStackedBarChart();
-  updateScatterPlot();
-  updateHorizontalBarChart();
-  updateBoxPlot();
+  btn.addEventListener('click', () => {
+    const is2 = dashboard.classList.contains('layout-2rows');
+    dashboard.classList.toggle('layout-2rows', !is2);
+    dashboard.classList.toggle('layout-3rows', is2);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);

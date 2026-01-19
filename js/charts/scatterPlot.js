@@ -99,7 +99,7 @@ function createScatterPlot() {
       .attr("cx", d => xScale(d.iq))
       .attr("cy", d => yScale(d.cgpa))
       .attr("fill", d => d.internship === "Yes" ? "#27ae60" : "#e74c3c")
-      .attr("opacity", 0.7)
+      .attr("opacity", 0.75)
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.5)
       .on("mouseover", function (event, d) {
@@ -119,20 +119,12 @@ function createScatterPlot() {
   
     pointsEnter.transition().duration(300).attr("r", 5);
   
-    const allPoints = pointsEnter.merge(points);
-  
-    allPoints
+    pointsEnter.merge(points)
       .transition().duration(300)
       .attr("cx", d => xScale(d.iq))
       .attr("cy", d => yScale(d.cgpa))
-      .attr("opacity", d => {
-        const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
-        return inRange ? 0.8 : 0.1;
-      })
-      .attr("r", d => {
-        const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
-        return inRange ? 5 : 3;
-      });
+      .attr("opacity", 0.75)
+      .attr("r", 5);
   
     points.exit()
       .transition().duration(200)
