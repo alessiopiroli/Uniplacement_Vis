@@ -133,7 +133,9 @@ main {
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 2px solid #ecf0f1;
+    text-align: center;
 }
+
 
 /* SVG Charts */
 #stacked-bar-chart,
