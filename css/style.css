@@ -234,6 +234,8 @@ main {
 
     /* optional: center titles */
     text-align: center;
+    display: flex;
+    flex-direction: column;
 }
 
 /* SVG Charts */
@@ -244,7 +246,11 @@ main {
     width: 100%;
     display: flex;
     justify-content: center;
+
+    /* NEW: charts take available vertical space */
+    flex: 1 0 auto;
 }
+
 
 /* Slider Container */
 .slider-container {

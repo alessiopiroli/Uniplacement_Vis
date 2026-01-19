@@ -6,7 +6,7 @@
 function createStackedBarChart() {
     const container = d3.select("#stacked-bar-chart");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Create SVG
     const svg = container.append("svg")
@@ -58,7 +58,7 @@ function createStackedBarChart() {
 function updateStackedBarChart() {
     const svg = d3.select("#svg-stacked-bar");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Create CGPA bins (0.5 intervals from 4 to 11)
     const binEdges = d3.range(4, 11.5, 0.5);

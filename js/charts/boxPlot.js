@@ -6,7 +6,7 @@
 function createBoxPlot() {
     const container = d3.select("#box-plot");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Create SVG
     const svg = container.append("svg")
@@ -58,7 +58,7 @@ function createBoxPlot() {
 function updateBoxPlot() {
     const svg = d3.select("#svg-boxplot");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Filter to placed students only
     const placedData = filteredData.filter(d => d.placement === "Yes");
