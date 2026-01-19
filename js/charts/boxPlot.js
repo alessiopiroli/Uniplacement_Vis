@@ -38,7 +38,7 @@ function createBoxPlot() {
     // Legend
     const legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", `translate(${width - 180}, ${margin.top})`);
+        .attr("transform", `translate(${width - 120}, ${margin.top})`);
 
     const legendData = [
         { label: "Communication Skills", color: "#e67e22" },
