@@ -8,6 +8,11 @@ function createHorizontalBarChart() {
     const width = 500;
     const height = 350;
 
+    // Use a larger left margin for this chart to make room for:
+    // - y tick labels (College IDs)
+    // - y-axis label ("College ID") without clipping
+    const m = { ...margin, left: 110 };
+
     // Create SVG
     const svg = container.append("svg")
         .attr("width", width)
@@ -19,7 +24,7 @@ function createHorizontalBarChart() {
     svg.append("g").attr("class", "x-axis");
     svg.append("g").attr("class", "y-axis");
 
-    // Axis labels
+    // X-axis label
     svg.append("text")
         .attr("class", "axis-label")
         .attr("x", width / 2)
@@ -27,12 +32,17 @@ function createHorizontalBarChart() {
         .attr("text-anchor", "middle")
         .text("Student Count");
 
+    // Y-axis label: rotate around a fixed point so positioning is stable.
+    // Keep it clearly left of the y tick labels, but inside the SVG to avoid clipping.
+    const yLabelX = 18;
+    const yLabelY = height / 2;
+
     svg.append("text")
         .attr("class", "axis-label")
-        .attr("transform", "rotate(-90)")
-        .attr("x", -height / 2)
-        .attr("y", 15)
+        .attr("x", yLabelX)
+        .attr("y", yLabelY)
         .attr("text-anchor", "middle")
+        .attr("transform", `rotate(-90, ${yLabelX}, ${yLabelY})`)
         .text("College ID");
 
     updateHorizontalBarChart();
@@ -42,6 +52,9 @@ function updateHorizontalBarChart() {
     const svg = d3.select("#svg-bar");
     const width = 500;
     const height = 350;
+
+    // Must match createHorizontalBarChart()
+    const m = { ...margin, left: 100 };
 
     // Aggregate data by college - count placed students
     const collegeData = d3.rollup(
@@ -59,21 +72,21 @@ function updateHorizontalBarChart() {
     const xScale = d3.scaleLinear()
         .domain([0, d3.max(collegeArray, d => d.count) || 1])
         .nice()
-        .range([margin.left, width - margin.right]);
+        .range([m.left, width - m.right]);
 
     const yScale = d3.scaleBand()
         .domain(collegeArray.map(d => d.college))
-        .range([margin.top, height - margin.bottom])
+        .range([m.top, height - m.bottom])
         .padding(0.2);
 
     // Update axes
     svg.select(".x-axis")
-        .attr("transform", `translate(0, ${height - margin.bottom})`)
+        .attr("transform", `translate(0, ${height - m.bottom})`)
         .transition().duration(500)
         .call(d3.axisBottom(xScale).ticks(5));
 
     svg.select(".y-axis")
-        .attr("transform", `translate(${margin.left}, 0)`)
+        .attr("transform", `translate(${m.left}, 0)`)
         .transition().duration(500)
         .call(d3.axisLeft(yScale));
 
@@ -87,7 +100,7 @@ function updateHorizontalBarChart() {
     bars.enter()
         .append("rect")
         .attr("class", "h-bar")
-        .attr("x", margin.left)
+        .attr("x", m.left)
         .attr("y", d => yScale(d.college))
         .attr("height", yScale.bandwidth())
         .attr("width", 0)
@@ -102,13 +115,13 @@ function updateHorizontalBarChart() {
             hideTooltip();
         })
         .transition().duration(500)
-        .attr("width", d => xScale(d.count) - margin.left);
+        .attr("width", d => xScale(d.count) - m.left);
 
     // Update
     bars.transition().duration(500)
         .attr("y", d => yScale(d.college))
         .attr("height", yScale.bandwidth())
-        .attr("width", d => xScale(d.count) - margin.left);
+        .attr("width", d => xScale(d.count) - m.left);
 
     // Exit
     bars.exit()
