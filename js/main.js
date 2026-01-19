@@ -8,6 +8,11 @@ let data = [];
 let filteredData = [];
 let cgpaRange = [4, 11];
 
+// View 2 sampling controls/state
+let scatterSamplePct = 5;         // slider value (0..100), default at launch
+let scatterSampleCount = 0;         // updated by updateScatterPlot()
+let scatterSampledData = [];        // updated by updateScatterPlot()
+
 // Chart dimensions
 const margin = { top: 30, right: 30, bottom: 50, left: 60 };
 
@@ -39,7 +44,10 @@ function hideTooltip() {
 // Load data and initialize dashboard
 async function init() {
     try {
-        data = await d3.csv("data/CollegePlacement.csv", d => ({
+        data = await d3.csv("data/CollegePlacement.csv", (d, i) => ({
+            _index: i,              // stable unique id for join keys
+            _rand: Math.random(),   // RANDOM sampling value (new each page load)
+
             college_id: d.College_ID,
             iq: +d.IQ,
             prev_sem: +d.Prev_Sem_Result,
@@ -63,20 +71,23 @@ async function init() {
         createBoxPlot();
 
         // Setup interactions
-        setupSliderInteraction();
+        setupSliderInteraction();      // View 1
+        setupScatterSampleSlider();    // View 2
 
     } catch (error) {
         console.error("Error loading data:", error);
     }
 }
 
-// Slider interaction setup
+// View 1 slider interaction setup (CGPA range)
 function setupSliderInteraction() {
     const sliderMin = document.getElementById('cgpa-slider-min');
     const sliderMax = document.getElementById('cgpa-slider-max');
     const rangeMin = document.getElementById('range-min');
     const rangeMax = document.getElementById('range-max');
-    const rangeSelected = document.querySelector('.range-selected');
+
+    // Scope to View 1 so it won’t accidentally pick View 2’s .range-selected
+    const rangeSelected = document.querySelector('#view1-container .range-selected');
 
     function updateSlider() {
         let minVal = parseFloat(sliderMin.value);
@@ -108,6 +119,31 @@ function setupSliderInteraction() {
 
     // Initialize slider display
     updateSlider();
+}
+
+// View 2 slider interaction setup (percent of points rendered)
+function setupScatterSampleSlider() {
+    const slider = document.getElementById('scatter-sample-slider');
+    const valueSpan = document.getElementById('scatter-percent');
+    const selectedBar = document.getElementById('scatter-range-selected');
+
+    if (!slider || !valueSpan || !selectedBar) return;
+
+    function updateScatterSample() {
+        scatterSamplePct = parseInt(slider.value, 10);
+        valueSpan.textContent = `${scatterSamplePct}%`;
+
+        selectedBar.style.left = '0%';
+        selectedBar.style.width = `${scatterSamplePct}%`;
+
+        updateScatterPlot();
+
+        // Optional: quick visibility into counts
+        // console.log(`[View2] sampled ${scatterSampleCount}/${data.length} points`);
+    }
+
+    slider.addEventListener('input', updateScatterSample);
+    updateScatterSample();
 }
 
 // Update all views based on filter

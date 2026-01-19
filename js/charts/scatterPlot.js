@@ -67,7 +67,7 @@ function updateScatterPlot() {
     const legendWidth = 140;
     const plotRight = width - margin.right - legendWidth;
 
-    // Scales
+    // Scales (keep axes stable using full dataset)
     const xScale = d3.scaleLinear()
         .domain([d3.min(data, d => d.iq) - 5, d3.max(data, d => d.iq) + 5])
         .range([margin.left, plotRight]);
@@ -87,11 +87,19 @@ function updateScatterPlot() {
         .transition().duration(500)
         .call(d3.axisLeft(yScale).ticks(6));
 
+    // RANDOM sampling (uses per-row _rand generated at load)
+    const threshold = (scatterSamplePct ?? 100) / 100;
+    const dataToRender = data.filter(d => (d._rand ?? 0) < threshold);
+
+    // Expose counts + sampled rows (so you can inspect at launch)
+    scatterSampledData = dataToRender;
+    scatterSampleCount = dataToRender.length;
+
     // Bind data to points
     const pointsGroup = svg.select(".points-group");
 
     const points = pointsGroup.selectAll("circle")
-        .data(data, d => d.college_id + d.iq + d.cgpa);
+        .data(dataToRender, d => d._index);
 
     // Enter
     const pointsEnter = points.enter()
