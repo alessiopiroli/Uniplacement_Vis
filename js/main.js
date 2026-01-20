@@ -6,121 +6,153 @@
 // Global variables
 let data = [];
 let filteredData = [];
-let cgpaRange = [4, 11];
+
+// NEW: View 1 only (CGPA slider should only affect View 1)
+let view1CgpaRange = [4, 11];
+
+// View 2 sampling globals (IMPORTANT: must exist before scatterPlot.js reads them)
+let scatterSamplePct = 5;      // default at first load
+let scatterSampledData = [];
+let scatterSampleCount = 0;
 
 // Chart dimensions
 const margin = { top: 30, right: 30, bottom: 50, left: 60 };
 
 // Color scales
 const placementColor = d3.scaleOrdinal()
-    .domain(["Yes", "No"])
-    .range(["#27ae60", "#e74c3c"]);
+  .domain(["Yes", "No"])
+  .range(["#27ae60", "#e74c3c"]);
 
 const internshipColor = d3.scaleOrdinal()
-    .domain(["Yes", "No"])
-    .range(["#27ae60", "#e74c3c"]);
+  .domain(["Yes", "No"])
+  .range(["#27ae60", "#e74c3c"]);
 
 // Tooltip
 const tooltip = d3.select("#tooltip");
 
-// Tooltip functions
 function showTooltip(event, html) {
-    tooltip
-        .html(html)
-        .style("left", (event.pageX + 15) + "px")
-        .style("top", (event.pageY - 10) + "px")
-        .classed("visible", true);
+  tooltip
+    .html(html)
+    .style("left", (event.pageX + 15) + "px")
+    .style("top", (event.pageY - 10) + "px")
+    .classed("visible", true);
 }
 
 function hideTooltip() {
-    tooltip.classed("visible", false);
+  tooltip.classed("visible", false);
 }
 
 // Load data and initialize dashboard
 async function init() {
-    try {
-        data = await d3.csv("data/CollegePlacement.csv", d => ({
-            college_id: d.College_ID,
-            iq: +d.IQ,
-            prev_sem: +d.Prev_Sem_Result,
-            cgpa: +d.CGPA,
-            academic_perf: +d.Academic_Performance,
-            internship: d.Internship_Experience,
-            extra_curricular: +d.Extra_Curricular_Score,
-            communication: +d.Communication_Skills,
-            projects: +d.Projects_Completed,
-            placement: d.Placement
-        }));
+  try {
+    data = await d3.csv("data/CollegePlacement.csv", (d, i) => ({
+      _index: i,
+      _rand: Math.random(),
 
-        filteredData = [...data];
+      // Be tolerant to different header naming
+      college_id: d.College_ID ?? d.CollegeID ?? d.CollegeId ?? d.College_ID,
+      iq: +(d.IQ ?? d.Iq),
+      prev_sem: +(d.Prev_Sem_Result ?? d.PrevSemResult),
+      cgpa: +(d.CGPA ?? d.Cgpa),
+      academic_perf: +(d.Academic_Performance ?? d.AcademicPerformance),
+      internship: (d.Internship_Experience ?? d.InternshipExperience),
+      extra_curricular: +(d.Extra_Curricular_Score ?? d.ExtraCurricularScore),
+      communication: +(d.Communication_Skills ?? d.CommunicationSkills),
+      projects: +(d.Projects_Completed ?? d.ProjectsCompleted),
+      placement: d.Placement
+    }));
 
-        console.log("Data loaded:", data.length, "records");
+    // Keep other views unfiltered
+    filteredData = [...data];
 
-        // Initialize all views
-        createStackedBarChart();
-        createScatterPlot();
-        createHorizontalBarChart();
-        createBoxPlot();
+    // Initialize all views
+    createStackedBarChart();
+    createScatterPlot();
+    createHorizontalBarChart();
+    createBoxPlot();
 
-        // Setup interactions
-        setupSliderInteraction();
+    // Setup interactions
+    setupSliderInteraction();          // View 1 range filter (ONLY View 1)
+    setupScatterSampleInteraction();   // View 2 sampling slider
+    setupSwapViewsButton();            // Layout toggle button
 
-    } catch (error) {
-        console.error("Error loading data:", error);
-    }
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
 }
 
-// Slider interaction setup
+// View 1: CGPA range slider (ONLY updates View 1)
 function setupSliderInteraction() {
-    const sliderMin = document.getElementById('cgpa-slider-min');
-    const sliderMax = document.getElementById('cgpa-slider-max');
-    const rangeMin = document.getElementById('range-min');
-    const rangeMax = document.getElementById('range-max');
-    const rangeSelected = document.querySelector('.range-selected');
+  const sliderMin = document.getElementById('cgpa-slider-min');
+  const sliderMax = document.getElementById('cgpa-slider-max');
+  const rangeMin = document.getElementById('range-min');
+  const rangeMax = document.getElementById('range-max');
 
-    function updateSlider() {
-        let minVal = parseFloat(sliderMin.value);
-        let maxVal = parseFloat(sliderMax.value);
+  const rangeSelected = document.querySelector('#view1-container .range-selected');
 
-        // Prevent min from exceeding max
-        if (minVal > maxVal) {
-            [sliderMin.value, sliderMax.value] = [maxVal, minVal];
-            [minVal, maxVal] = [maxVal, minVal];
-        }
+  function updateSlider() {
+    let minVal = parseFloat(sliderMin.value);
+    let maxVal = parseFloat(sliderMax.value);
 
-        // Update display values
-        rangeMin.textContent = minVal.toFixed(1);
-        rangeMax.textContent = maxVal.toFixed(1);
-
-        // Update the colored range bar
-        const percent1 = ((minVal - 4) / 7) * 100;
-        const percent2 = ((maxVal - 4) / 7) * 100;
-        rangeSelected.style.left = percent1 + '%';
-        rangeSelected.style.width = (percent2 - percent1) + '%';
-
-        // Update global range and refresh views
-        cgpaRange = [minVal, maxVal];
-        updateAllViews();
+    if (minVal > maxVal) {
+      [sliderMin.value, sliderMax.value] = [maxVal, minVal];
+      [minVal, maxVal] = [maxVal, minVal];
     }
 
-    sliderMin.addEventListener('input', updateSlider);
-    sliderMax.addEventListener('input', updateSlider);
+    rangeMin.textContent = minVal.toFixed(1);
+    rangeMax.textContent = maxVal.toFixed(1);
 
-    // Initialize slider display
-    updateSlider();
-}
+    const percent1 = ((minVal - 4) / 7) * 100;
+    const percent2 = ((maxVal - 4) / 7) * 100;
+    rangeSelected.style.left = percent1 + '%';
+    rangeSelected.style.width = (percent2 - percent1) + '%';
 
-// Update all views based on filter
-function updateAllViews() {
-    // Filter data based on CGPA range
-    filteredData = data.filter(d => d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1]);
-
-    // Update each view
+    // IMPORTANT: do NOT touch filteredData, and do NOT update other charts
+    view1CgpaRange = [minVal, maxVal];
     updateStackedBarChart();
-    updateScatterPlot();
-    updateHorizontalBarChart();
-    updateBoxPlot();
+  }
+
+  sliderMin.addEventListener('input', updateSlider);
+  sliderMax.addEventListener('input', updateSlider);
+  updateSlider();
 }
 
-// Initialize on page load
+// View 2: sampling slider
+function setupScatterSampleInteraction() {
+  const slider = document.getElementById('scatter-sample-slider');
+  const pctLabel = document.getElementById('scatter-percent');
+  const selectedBar = document.getElementById('scatter-range-selected');
+
+  if (!slider || !pctLabel || !selectedBar) return;
+
+  function updateScatterSamplingUI() {
+    scatterSamplePct = +slider.value;
+    pctLabel.textContent = `${scatterSamplePct}%`;
+    selectedBar.style.left = '0%';
+    selectedBar.style.width = `${scatterSamplePct}%`;
+  }
+
+  slider.addEventListener('input', () => {
+    updateScatterSamplingUI();
+    updateScatterPlot();
+  });
+
+  // Initialize to default (5%)
+  updateScatterSamplingUI();
+  updateScatterPlot();
+}
+
+// Layout toggle button
+function setupSwapViewsButton() {
+  const btn = document.getElementById('swap-views-btn');
+  const dashboard = document.getElementById('dashboard');
+  if (!btn || !dashboard) return;
+
+  btn.addEventListener('click', () => {
+    const is2 = dashboard.classList.contains('layout-2rows');
+    dashboard.classList.toggle('layout-2rows', !is2);
+    dashboard.classList.toggle('layout-3rows', is2);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", init);

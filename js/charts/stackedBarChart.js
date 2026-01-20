@@ -6,7 +6,7 @@
 function createStackedBarChart() {
     const container = d3.select("#stacked-bar-chart");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Create SVG
     const svg = container.append("svg")
@@ -58,16 +58,21 @@ function createStackedBarChart() {
 function updateStackedBarChart() {
     const svg = d3.select("#svg-stacked-bar");
     const width = 800;
-    const height = 300;
+    const height = 350;
+
+    // View 1 ONLY filtering (do not use filteredData)
+    const view1Data = data.filter(d =>
+        d.cgpa >= view1CgpaRange[0] && d.cgpa <= view1CgpaRange[1]
+    );
 
     // Create CGPA bins (0.5 intervals from 4 to 11)
     const binEdges = d3.range(4, 11.5, 0.5);
 
-    // Bin the data
+    // Bin the data (using view1Data only)
     const binnedData = binEdges.slice(0, -1).map((edge, i) => {
         const binMin = edge;
         const binMax = binEdges[i + 1];
-        const binData = filteredData.filter(d => d.cgpa >= binMin && d.cgpa < binMax);
+        const binData = view1Data.filter(d => d.cgpa >= binMin && d.cgpa < binMax);
 
         return {
             bin: binMin,

@@ -6,7 +6,7 @@
 function createBoxPlot() {
     const container = d3.select("#box-plot");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Create SVG
     const svg = container.append("svg")
@@ -38,7 +38,7 @@ function createBoxPlot() {
     // Legend
     const legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", `translate(${width - 180}, ${margin.top})`);
+        .attr("transform", `translate(${width - 120}, ${margin.top})`);
 
     const legendData = [
         { label: "Communication Skills", color: "#e67e22" },
@@ -58,7 +58,7 @@ function createBoxPlot() {
 function updateBoxPlot() {
     const svg = d3.select("#svg-boxplot");
     const width = 800;
-    const height = 300;
+    const height = 350;
 
     // Filter to placed students only
     const placedData = filteredData.filter(d => d.placement === "Yes");

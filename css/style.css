@@ -5,12 +5,14 @@
     box-sizing: border-box;
 }
 
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f7fa;
     color: #333;
     line-height: 1.6;
 }
+
 
 /* Header */
 header {
@@ -19,36 +21,226 @@ header {
     text-align: center;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
+
 
 header h1 {
     font-size: 1.8rem;
     margin-bottom: 5px;
 }
 
+
 header .subtitle {
     font-size: 0.95rem;
     opacity: 0.9;
 }
 
+
+/* Grayscale mode toggle (CSS-only) */
+header,
+main {
+    transition: filter 0.2s ease;
+}
+
+
+#grayscale-toggle:checked ~ main {
+    filter: grayscale(100%);
+}
+
+
+/* Hide the real checkbox but keep it clickable via <label for="..."> */
+.grayscale-toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/* Toggle placement inside the blue header */
+.theme-toggle {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+
+    /* NEW: stack toggle + button vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    color: white;
+}
+
+
+.toggle-switch {
+    width: 46px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Make the switch track green when ON */
+#grayscale-toggle:checked ~ header .toggle-switch {
+    background: rgba(46, 204, 113, 0.75);
+    border-color: rgba(255, 255, 255, 0.65);
+}
+
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+
+    /* Center vertically no matter what */
+    top: 50%;
+    left: 2px;
+    transform: translateY(-50%);
+
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+
+/* Keep the vertical centering, only shift horizontally when checked */
+#grayscale-toggle:checked ~ header .toggle-switch::after {
+    transform: translate(22px, -50%);
+}
+
+
+/* NEW: swap button styling */
+.swap-views-btn {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s ease, transform 0.05s ease;
+}
+
+
+.swap-views-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+
+.swap-views-btn:active {
+    transform: translateY(1px);
+}
+
+
 /* Dashboard Layout */
 .dashboard {
-    max-width: 1400px;
+    /* CHANGED: remove max-width so it can stretch full screen */
+    max-width: none;
+    width: 100%;
+
     margin: 20px auto;
     padding: 0 20px;
+
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
+
+
+/* Dashboard Layout (GRID) */
+.dashboard {
+    max-width: none;
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 20px;
+
+    display: grid;
+    gap: 20px;
+}
+
+/* Assign grid areas */
+#view1-container { grid-area: v1; }
+#view2-container { grid-area: v2; }
+#view3-container { grid-area: v3; }
+#view4-container { grid-area: v4; }
+
+/* ORIGINAL layout (3 rows):
+   Row1: v1 spans full width
+   Row2: v2 left, v3 right
+   Row3: v4 spans full width
+*/
+.dashboard.layout-3rows {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "v1 v1"
+        "v2 v3"
+        "v4 v4";
+}
+
+/* NEW layout (2 rows):
+   Row1: v1 left, v2 right
+   Row2: v3 left, v4 right
+*/
+.dashboard.layout-2rows {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "v1 v2"
+        "v3 v4";
+}
+
+/* Single slider (View 2) must be clickable */
+.range-slider.single-range input[type="range"] {
+    pointer-events: auto;
+}
+
+/* Responsive: one column */
+@media (max-width: 1000px) {
+    .dashboard.layout-3rows,
+    .dashboard.layout-2rows {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "v1"
+            "v2"
+            "v3"
+            "v4";
+    }
+}
+
 
 .row {
     display: flex;
     gap: 20px;
 }
 
+
+/* CHANGED: ensure the two panels truly share the row width */
 .row .chart-container {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0; /* prevents flex overflow */
 }
+
+
+/* NEW: swap layout (interchange views) */
+.dashboard.swapped #row-1,
+.dashboard.swapped #row-2 {
+    flex-direction: row-reverse;
+}
+
 
 /* Chart Containers */
 .chart-container {
@@ -58,13 +250,20 @@ header .subtitle {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+
 .chart-container h2 {
     font-size: 1rem;
     color: #2c3e50;
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 2px solid #ecf0f1;
+
+    /* optional: center titles */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
 }
+
 
 /* SVG Charts */
 #stacked-bar-chart,
@@ -74,7 +273,12 @@ header .subtitle {
     width: 100%;
     display: flex;
     justify-content: center;
+
+    /* NEW: charts take available vertical space */
+    flex: 1 0 auto;
 }
+
+
 
 /* Slider Container */
 .slider-container {
@@ -88,10 +292,12 @@ header .subtitle {
     border-radius: 8px;
 }
 
+
 .slider-container label {
     font-weight: 600;
     color: #2c3e50;
 }
+
 
 .slider-container span {
     font-weight: 600;
@@ -100,12 +306,14 @@ header .subtitle {
     font-size: 14px;
 }
 
+
 /* Dual Range Slider */
 .range-slider {
     position: relative;
     width: 300px;
     height: 30px;
 }
+
 
 .range-track {
     position: absolute;
@@ -117,6 +325,7 @@ header .subtitle {
     border-radius: 3px;
 }
 
+
 .range-selected {
     position: absolute;
     top: 50%;
@@ -125,6 +334,7 @@ header .subtitle {
     background: linear-gradient(90deg, #3498db, #2ecc71);
     border-radius: 3px;
 }
+
 
 .range-slider input[type="range"] {
     position: absolute;
@@ -138,6 +348,7 @@ header .subtitle {
     pointer-events: none;
     cursor: pointer;
 }
+
 
 .range-slider input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -153,10 +364,12 @@ header .subtitle {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+
 .range-slider input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.1);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
+
 
 .range-slider input[type="range"]::-moz-range-thumb {
     width: 20px;
@@ -168,6 +381,14 @@ header .subtitle {
     pointer-events: auto;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+
+
+/* Single slider (View 2) must be clickable */
+.range-slider.single-range input[type="range"] {
+    pointer-events: auto;
+}
+
+
 
 /* Tooltip */
 .tooltip {
@@ -184,9 +405,11 @@ header .subtitle {
     max-width: 250px;
 }
 
+
 .tooltip.visible {
     opacity: 1;
 }
+
 
 /* Axis Styles */
 .axis text {
@@ -194,10 +417,12 @@ header .subtitle {
     fill: #666;
 }
 
+
 .axis path,
 .axis line {
     stroke: #ccc;
 }
+
 
 .axis-label {
     font-size: 12px;
@@ -205,55 +430,67 @@ header .subtitle {
     fill: #2c3e50;
 }
 
+
 /* Legend */
 .legend {
     font-size: 12px;
 }
+
 
 .legend rect {
     stroke: #fff;
     stroke-width: 1px;
 }
 
+
 .legend text {
     fill: #333;
 }
+
 
 /* Colors */
 .placed {
     fill: #27ae60;
 }
 
+
 .not-placed {
     fill: #e74c3c;
 }
+
 
 .has-internship {
     fill: #27ae60;
 }
 
+
 .no-internship {
     fill: #e74c3c;
 }
+
 
 /* Brushing Effect */
 .ghosted {
     opacity: 0.2;
 }
 
+
 .highlighted {
     stroke: #f39c12;
     stroke-width: 2px;
 }
+
 
 /* Bar Chart Bars */
 .bar {
     transition: opacity 0.3s ease;
 }
 
+
 .bar:hover {
     opacity: 0.8;
 }
+
 
 /* Box Plot Styles */
 .box {
@@ -261,15 +498,18 @@ header .subtitle {
     stroke-width: 1.5px;
 }
 
+
 .median-line {
     stroke: #333;
     stroke-width: 2px;
 }
 
+
 .whisker {
     stroke: #333;
     stroke-width: 1px;
 }
+
 
 /* Responsive */
 @media (max-width: 1000px) {
